@@ -1,84 +1,70 @@
 clear;
 clc;
 
-i_d = 0.68;
-i_q = 0;
-i_od = 0.68;
-i_oq = 0;
-v_od = 0.47;
-v_oq = 0;
-i_ld = 0.68;
-i_lq = 0;
-m_d = 0.3;
-m_q = 0;
+% Initial States
+Id2 = -0.618249003;
+Iq2 = -2.68e-07;
+Vd2 = 0.485249524;
+Vq2 = -0.018170484;
+VBat2ds = 0.246385332;
+VBat2qs = 1.1901986;
+% Ild2 = Id2;
+% Ilq2 = Iq2;
 
-for i = 1:1
-    t = 0:0.0032:0.0064;
-    tic
-    [t,x] = ode45(@(t,x)der_dyn(t,x),t,[i_d;i_q;i_od;i_oq;v_od;v_oq;i_ld;i_lq;m_d;m_q]);
-    toc
-%     s(i,:) = x(2,:);
-%     i_d = x(2,1);
-%     i_q = x(2,2);
-%     i_od = x(2,3);
-%     i_oq = x(2,4);
-%     v_od = x(2,5);
-%     v_oq = x(2,6);
-%     i_ld = x(2,7);
-%     i_lq = x(2,8);
-%     m_d = x(2,9);
-%     m_q = x(2,10);
+% ODEsolver
+for i = 1:600000
+    t = 0:0.0001:0.0002;
+%     tic;
+    [t,x] = ode45(@(t,x)der_dyn(t,x),t,[Id2;Iq2;Vd2;Vq2;VBat2ds;VBat2qs]);
+%     toc;
+    s(i,:) = x(2,:);
+    Id2 = x(2,1);
+    Iq2 = x(2,2);
+    Vd2 = x(2,3);
+    Vq2 = x(2,4);
+    VBat2ds = x(2,5);
+    VBat2qs = x(2,6);
+%     Ild2 = x(2,7);
+%     Ilq2 = x(2,8);
 end
 
-plot(x(:,5))
-% axis([0 10 0.465 0.48])
+plot(x(:,3))
+% axis([0 10 0.48 0.49])
 
+% Dynamic Equations
 function f = der_dyn(t,z)
 
-c_f = 2500;
-r_f = 0.002;
-l_f = 0.0001;
-P_r = 1;
-Q_r = 0.000001;
-k_p = 0.5;
-r_c = 0.0384;
-r_n = 0.001;
+R = 0.01;
+L = 0.005;
+C = 200;
+K = 20;
 
-i_d = z(1);
-i_q = z(2);
-i_od = z(3);
-i_oq = z(4);
-v_od = z(5);
-v_oq = z(6);
-i_ld = z(7);
-i_lq = z(8);
-m_d = z(9);
-m_q = z(10);
+Id2 = z(1);
+Iq2 = z(2);
+Vd2 = z(3);
+Vq2 = z(4);
+VBat2ds = z(5);
+VBat2qs = z(6);
+% Ild2 = z(7);
+% Ilq2 = z(8);
 
-w = 1/60;
-I_ld = 2.08;
-I_lq = 0.000001;
-v_bd = 0.48;
-v_bq = 0.000001;
-% v_bd = r_n*(i_od-i_d);
-% v_bq = r_n*(i_oq-i_q);
-% v_err = 0.48 - v_bd;
-% v_diesel = 0.03*v_err + 0.1*(v_err/(1 + v_err));
-% v_err_bat = 0.48 - v_diesel;
-% v_bat = 0.02*v_err_bat + 0.08*(v_err_bat/(1 + v_err_bat));
-% v_bd = v_diesel + v_bat;
+w = 1/(2*pi*60);
+I_mg_d = 0.16;
+I_mg_q = 0.09;
+V_mg_d = 12.47;
+V_mg_q = 0.66;
+Id2_ref = -0.618;
+Iq2_ref = 0.0;
 
 f = zeros(size(z));
 
-f(1) = -P_r*i_d + w*i_q + v_bd;
-f(2) = -Q_r*i_q - w*i_d + v_bq;
-f(3) = -r_c*i_od + w*i_oq + v_od - v_bd;
-f(4) = -r_c*i_oq - w*i_od + v_oq - v_bq;
-f(5) = w*v_oq + (i_ld - i_od)/c_f;
-f(6) = -w*v_od + (i_lq - i_oq)/c_f;
-f(7) = -(r_f/l_f)*i_ld + w*i_lq + (m_d - v_od)/l_f;
-f(8) = -(r_f/l_f)*i_lq - w*i_ld + (m_q - v_oq)/l_f;
-f(9) = -w*i_lq + k_p*(I_ld - i_ld);
-f(10) = -w*i_ld + k_p*(I_lq - i_lq);
+f(1) = -(R/L)*Id2 + w*Iq2 - (VBat2ds - Vd2)/L;
+f(2) = -(R/L)*Iq2 - w*Id2 - (VBat2qs - Vq2)/L;
+f(3) = w*Vd2 - (Id2_ref - Id2)/C;
+f(4) = -w*Vq2 - (Iq2_ref - Iq2)/C;
+f(5) = Vd2 + w*L*Iq2 - K*(Id2_ref - Id2);
+f(6) = Vq2 - w*L*Id2 - K*(Iq2_ref - Iq2);
+% f(7) = -R*Id2 + w*Iq2 + Vd2 - V_mg_d;
+% f(8) = -R*Iq2 - w*Id2 + Vq2 - V_mg_q;
 
 end
