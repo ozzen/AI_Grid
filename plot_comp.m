@@ -36,19 +36,43 @@ clear; clc;
 % plot(x_B,B(:,10))
 
 %% Performance comparison between NC and BESS voltage controller
-VBat_original = readmatrix("Data\Original.csv");
-VBat_learned = readmatrix("Data\Learned.csv");
-VBat_learned(30000,:) = VBat_learned(29999,:);
-x = linspace(0,3,30000);
+Vd2_original = readmatrix("Data\Trace_rtds.csv");
+Vd2_learned = readmatrix("Data\Trace_matlab.csv");
+% VBat_learned(30000,:) = VBat_learned(29999,:);
+x = linspace(0,5,50000);
 
-plot(x,VBat_original(:,2),'r')
+plot(x,Vd2_original(1:50000,1),'r')
 hold on
-plot(x,VBat_learned(:,2),'b')
-% ylim([0.2463,0.2468])
-ylim([1.19003,1.19035])
+plot(x,Vd2_learned(1:50000,1),'b')
+% ylim([0.485,0.487])
+% ylim([1.19003,1.19035])
 xlabel('Time (s)')
 ylabel('Voltage (kV)')
-legend('Original','Learned')
-title('VBat2qs Comparison')
+legend('RTDS','Matlab')
+title('Vd2 Comparison')
 
-mse = immse(VBat_original(:,2),VBat_learned(:,2));
+% mse = immse(VBat_original(:,2),VBat_learned(:,2));
+
+%% Data variance computation to determine model uncertainties
+% n = 10;
+% T = 6000;
+% Z = n*(n-1)/2;
+% 
+% t1 = readmatrix("Data\Trends\Trace_trend_1.csv");
+% t2 = readmatrix("Data\Trends\Trace_trend_2.csv");
+% t3 = readmatrix("Data\Trends\Trace_trend_3.csv");
+% t4 = readmatrix("Data\Trends\Trace_trend_4.csv");
+% t5 = readmatrix("Data\Trends\Trace_trend_5.csv");
+% t6 = readmatrix("Data\Trends\Trace_trend_6.csv");
+% t7 = readmatrix("Data\Trends\Trace_trend_7.csv");
+% t8 = readmatrix("Data\Trends\Trace_trend_8.csv");
+% t9 = readmatrix("Data\Trends\Trace_trend_9.csv");
+% t10 = readmatrix("Data\Trends\Trace_trend_10.csv");
+% 
+% Diff = (abs(t1 - t2) + abs(t1 - t3) + abs(t1 - t4) + abs(t1 - t5) + abs(t1 - t6)+ abs(t1 - t7) + abs(t1 - t8) + abs(t1 - t9) +...
+%        abs(t1 - t10) + abs(t2 - t3) + abs(t2 - t4) + abs(t2 - t5) + abs(t2 - t6) + abs(t2 - t7) + abs(t2 - t8) + abs(t2 - t9) +...
+%        abs(t2 - t10) + abs(t3 - t4) + abs(t3 - t5) + abs(t3 - t6) + abs(t3 - t7) + abs(t3 - t8) + abs(t3 - t9) + abs(t3 - t10) +...
+%        abs(t4 - t5) + abs(t4 - t6) + abs(t4 - t7) + abs(t4 - t8) + abs(t4 - t9) + abs(t4 - t10) + abs(t5 - t6) + abs(t5 - t7) +...
+%        abs(t5 - t8) + abs(t5 - t9) + abs(t5 - t10) + abs(t6 - t7) + abs(t6 - t8) + abs(t6 - t9) + abs(t6 - t10) + abs(t7 - t8) +...
+%        abs(t7 - t9) + abs(t7 - t10) + abs(t8 - t9) + abs(t8 - t10) + abs(t9 - t10))/Z;
+% Avg_diff(:,1:13) = mean(Diff(:,1:13));
