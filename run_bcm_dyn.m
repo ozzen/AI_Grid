@@ -57,8 +57,7 @@ R = 0.01;
 L1 = 0.005;
 L2 = 10;
 C = 200;
-K1 = 0.01;
-K2 = 0.05;
+K = 0.01;
 w = 1/(2*pi*60);
 I_mg_d = 0.16;
 I_mg_q = 0.09;
@@ -80,7 +79,7 @@ f(1) = -(R/L1)*Id2 + w*Iq2 + (Vd2 - V_mg_d)/L2;
 f(2) = -(R/L1)*Iq2 - w*Id2 + (Vq2 - V_mg_q)/L2;
 f(3) = w*Vd2 - (Id2_ref - Id2 + I_mg_d)/C;
 f(4) = -w*Vq2 - (Iq2_ref - Iq2 + I_mg_q)/C;
-f(5) = K1*Vd2 + w*L1*Iq2 - K2*(Id2_ref - Id2);
-f(6) = K2*Vq2 -w*L1*Id2 - K2*(Iq2_ref - Iq2);
+f(5) = K*Vd2 + w*L1*Iq2 - K*(Id2_ref - Id2);
+f(6) = K*Vq2 -w*L1*Id2 - K*(Iq2_ref - Iq2);
 
 end
