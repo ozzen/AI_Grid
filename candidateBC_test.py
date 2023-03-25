@@ -2,11 +2,13 @@ import numpy as np
 import pandas as pd
 from keras.models import load_model
 
-model = load_model('candidateBC.h5')
+model = load_model('candidateBC_loads.h5')
 mode = 0
 
 if mode == 0:
-    state = [[0.169780367, 0.092925863, -0.618292217, -3.94e-06, 0.2463826, 1.190239114, 12.44602956, 0.668271255, 0.510, -0.018176499]]
+    # state = [[0.17734,0.09544,-0.58738,1e-06,0.25893,1.24971,13.0935,0.693,0.50846,-0.01729,1.5,0.726,1,0.484]]
+    # state = [[0.16045,0.08635,-0.64921,-1e-06,0.23427,1.13069,11.8465,0.627,0.46138,-0.0182,0.091,0.044,0.036,0.017]]
+    state = [[0.1689,0.0909,-0.6183,0,0.2466,1.1902,12.47,0.66,0.4852,-0.0182,0.7,0.339,0.3,0.145]]
     action = model.predict(state)
     print(action)
     exit()
@@ -18,9 +20,9 @@ Id2_ref = -0.6183
 Iq2_ref = 0
 VBat2ds_ref = 0.2466
 VBat2qs_ref = 1.1902
-V_mg_d_ref = 12.4462
-V_mg_q_ref = 0.6677
-Vd2_ref = 0.4852
+V_mg_d_ref = 12.47
+V_mg_q_ref = 0.66
+Vd2_ref = 0.48
 Vq2_ref = -0.0182
 dev = 0.05
 safe_dev = 0.045

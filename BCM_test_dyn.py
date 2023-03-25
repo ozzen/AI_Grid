@@ -5,12 +5,12 @@ import pandas as pd
 from torch.utils.data import Dataset
 
 device = torch.device('cpu')
-mode = 1
+mode = 0
 
 if mode == 0:
-    model = hickle.load('Current_network.hkl')
+    model = hickle.load('current_load.hkl')
 else:
-    model = hickle.load('Voltage_network.hkl')
+    model = hickle.load('voltage_load.hkl')
 
 class TraceDataset(Dataset):
     """ Dataset for loading traces"""
@@ -20,11 +20,13 @@ class TraceDataset(Dataset):
         # self.tracedf = self.tracedf.apply(lambda x: x * 500000)
         if mode == 0:
             self.x = torch.tensor(self.tracedf[["I_mg_d", "I_mg_q"]].values).float().to(device)
-            self.y = torch.tensor(self.tracedf[["Id2", "Iq2", "VBat2ds", "VBat2qs", "V_mg_d", "V_mg_q", "Vd2", "Vq2"]].
+            self.y = torch.tensor(self.tracedf[["Id2", "Iq2", "Vd2", "Vq2", "VBat2ds", "VBat2qs", "P_Load229", "Q_Load229",
+                                                "P_Load236", "Q_Load236", "V_mg_d", "V_mg_q"]].
                                   values).float().to(device)
         else:
             self.x = torch.tensor(self.tracedf[["V_mg_d", "V_mg_q"]].values).float().to(device)
-            self.y = torch.tensor(self.tracedf[["I_mg_d", "I_mg_q", "Id2", "Iq2", "VBat2ds", "VBat2qs", "Vd2", "Vq2"]].
+            self.y = torch.tensor(self.tracedf[["Id2", "Iq2", "I_mg_d", "I_mg_q", "Vd2", "Vq2", "VBat2ds", "VBat2qs",
+                                                "P_Load229", "Q_Load229", "P_Load236", "Q_Load236"]].
                                   values).float().to(device)
         self.t = torch.tensor(np.linspace(0, 3, len(self.tracedf))).float().squeeze().to(device)
 
@@ -35,10 +37,11 @@ class TraceDataset(Dataset):
         sample = {'x': self.x[idx, :], 'y': self.y[idx, :], 't': self.t[idx]}
         return sample
 
-td = TraceDataset('Test_trace_2.csv')
+td = TraceDataset('data/Test_trace.csv')
 t_span = td.t
 X = td.x
 Y = td.y
+print(X,Y,t_span)
 
 action = model.forward(t_span,X,Y)
 print(action)

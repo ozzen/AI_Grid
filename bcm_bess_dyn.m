@@ -17,7 +17,7 @@ T = dur/dt;
 for i = 1:T
     t = 0:dt:2*dt;
     tic;
-    [t,x] = ode45(@(t,x)der_dyn(t,x),t,[Id2;Iq2;Vd2;Vq2;VBat2ds;VBat2qs]);
+    [t,x] = ode45(@(t,x)bess_dyn(t,x),t,[Id2;Iq2;Vd2;Vq2;VBat2ds;VBat2qs]);
     toc;
     s(i,:) = x(2,:);
     Id2 = x(2,1);
@@ -51,7 +51,7 @@ for i = 1:6
 end
 
 % Dynamic Equations
-function f = der_dyn(t,z)
+function f = bess_dyn(t,z)
 
 R = 0.01;
 L1 = 0.005;

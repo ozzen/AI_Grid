@@ -1,43 +1,14 @@
 clear;
 clc;
 
+Tr = readmatrix('data/Trace_DG_analytics.csv');
+
 % Duration
 dt = 0.0001;
 dur = 5;
 T = dur/dt;
 
-% Initial States
-Tm = 0.060946;
-W = 2*pi*59.9999;
-Vcon = -0.037065;
-Efd = 1.00404;
-Eq1 = -1.40674;
-Ed1 = 0.155879;
-PsiD1 = 1.41782;
-PsiQ1 = 0.161502;
-
-% ODEsolver
-for i = 1:T
-    t = 0:dt:2*dt;
-    [t,x] = ode45(@(t,x)dg_dyn(t,x),t,[Tm;W;Vcon;Efd;Eq1;Ed1;PsiD1;PsiQ1]);
-    s(i,:) = x(2,:);
-    Tm = x(2,1);
-    W = x(2,2);
-    Vcon = x(2,3);
-    Efd = x(2,4);
-    Eq1 = x(2,5);
-    Ed1 = x(2,6);
-    PsiD1 = x(2,7);
-    PsiQ1 = x(2,8);
-end
-
-% Plot Data
-X = (linspace(0,i*dt,length(s))).';
-plot(X,s(:,2),LineWidth=1)
-
-% Dynamic Equations
-function f = dg_dyn(t,z)
-
+% DG constants
 Ws = 2*pi*60;
 Pref = 0.5;
 Qref = 0.2;
@@ -45,12 +16,12 @@ Vref = 1.0;
 m = 0;
 
 k1 = 1/50;
-k2 = 1000;
-k3 = 1/10;
-k4 = 1/30;
+k2 = 1/20;
+k3 = 0.001;
+k4 = 1/75;
 
-H = 0.267;
-D = 0.1;
+H = 2.67;
+D = 0.01;
 Rs = 0.10634;
 Xd0 = 1.55;
 Xd1 = 0.28;
@@ -64,38 +35,77 @@ Td2 = 0.0086;
 Tq1 = 0.62;
 Tq2 = 0.0065;
 
-Id = 0.0246;
-Iq = 0.0175;
+% Initial States
+Tm = 0.060946154;
+W = 376.9936884/Ws;
+Vcon = -0.037064465;
+Efd = 1.058443204;
+Eq1 = -1.408598162;
+Ed1 = 0.138065683;
+PsiD1 = 1.418440417;
+PsiQ1 = 0.143443337;
 
-Tm = z(1);
-W = z(2);
-Vcon = z(3);
-Efd = z(4);
-Eq1 = z(5);
-Ed1 = z(6);
-PsiD1 = z(7);
-PsiQ1 = z(8);
+% ODEsolver
+for i = 1:T
 
-Pmech = W*Tm;
-Ed2 = Ed1*((Xq2 - Xl)/(Xq1 - Xl)) + PsiQ1*((Xq1 - Xq2)/(Xq1 - Xl));
-Eq2 = Eq1*((Xd2 - Xl)/(Xd1 - Xl)) + PsiD1*((Xd1 - Xd2)/(Xd1 - Xl));
-PsiD0 = -Id*Xd2 - Eq2;
-PsiQ0 = -Iq*Xd2 - Ed2;
-Vdterm = Ed2*(1 + Ws - W) - Rs*Id + Xq2*Iq;
-Vqterm = Eq2*(1 + Ws - W) - Rs*Iq - Xd2*Id;
+%     if i < T/2
+%         m = 0;
+%     else
+%         m = 1;
+%     end
 
-P = 0.45;
-Q = 0.19;
+    t = 0:dt:2*dt;
+    P = Tr(i,9);
+    Q = Tr(i,10);
+    Id = Tr(i,11);
+    Iq = Tr(i,12);
+    Vd = Tr(i,13)/12.47;
+%     PsiD1 = Tr(i,7);
+%     PsiQ1 = Tr(i,8);
 
-f = zeros(size(z));
+    Pmech = W*Tm;
+    Ed2 = Ed1*((Xq2 - Xl)/(Xq1 - Xl)) + PsiQ1*((Xq1 - Xq2)/(Xq1 - Xl));
+    Vdterm = Ed2*(1 + Ws - W) - Rs*Id + Xq2*Iq;
 
-f(1) = (1 - m)*k1*(Pref - P) + m*k2*(1 - W/Ws);
-f(2) = ((Pmech - D*W)/(1 + Ws - W) - (PsiD1*Iq - PsiQ1*Id))/(2*H);
-f(3) = (1 - m)*k3*(Qref - Q) + m*(Vref - Vdterm);
-f(4) = k4*(Vref + Vcon - Vdterm);
-f(5) = (Efd - Eq1 - (Xd0 - Xd1)*(Id - ((Xd1 - Xd2)*(PsiD1 + (Xd1 - Xl)*Id - Eq1))/(Xd1 - Xl)^2))/Td1;
-f(6) = (-Ed1 + (Xq0 - Xq1)*(Iq - ((Xq1 - Xq2)*(-PsiQ1 + (Xq1 - Xl)*Iq + Ed1))/(Xq1 - Xl)^2))/Tq1;
-f(7) = (-PsiD1 - (Xd1 - Xl)*Id + Eq1)/Td2;
-f(8) = (-PsiQ1 + (Xq1 - Xl)*Iq + Ed1)/Tq2;
+    [t,x] = ode45(@(t,x) ...
+        [(1 - m)*k1*(Pref - P) + m*k2*(1 - W); ...
+         ((Tm*W - D*W)/(1 + W) - (PsiD1*Iq - PsiQ1*Id))/(2*H*1000); ...
+         (1 - m)*k3*(Qref - Q) + m*(Vref - Vdterm); ...
+          k4*(Vref - Vd - Vcon); ...
+         (-PsiD1 + 1.42 - (Xd1 - Xl)*Id)/(Td1*Td1); ...
+         (-PsiQ1 + 0.142 + (Xq1 - Xl)*Iq)/Tq1;], ...
+         t,[Tm;W;Vcon;Efd;PsiD1;PsiQ1]);
+    
+    s(i,:) = x(2,:);
+    Tm = x(2,1);
+    W = x(2,2);
+    Vcon = x(2,3);
+    Efd = x(2,4);
+%     Eq1 = x(2,5);
+%     Ed1 = x(2,6);
+    PsiD1 = x(2,5);
+    PsiQ1 = x(2,6);
 
+    Xxx(i,1) = Tm*W;
+    Xxx(i,2) = D*W;
+    Xxx(i,3) = (1 + W);
+    Xxx(i,4) = Xxx(i,1) - Xxx(i,2);
+    Xxx(i,5) = Xxx(i,4) / Xxx(i,3);
+    Xxx(i,6) = (PsiD1*Iq - PsiQ1*Id);
+    Xxx(i,7) = Xxx(i,5) - Xxx(i,6);
+    
 end
+
+% Performance Metrics and Plot data
+n = 2;
+
+for i = 1:T
+    Diff(i,1) = abs(s(i,n) - Tr(i,n));
+    mean_diff = mean(Diff);
+end
+
+X = (linspace(0,i*dt,length(s))).';
+plot(X,s(:,n),LineWidth=1)
+hold on
+plot(X,Tr(1:50000,n)/Ws,LineWidth=1)
+legend('MATLAB','RTDS')
